@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B1B33">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<title>Lighthouse — Emergency Help, Anywhere</title>
+<style>
+  :root{
+    --navy-deep:#071226;
+    --navy:#0B1B33;
+    --navy-light:#12294D;
+    --beam:#FFC24B;
+    --beam-soft:#FFE3A3;
+    --white:#FFFFFF;
+    --off:#EAF0F9;
+    --muted:#9FB0CC;
+    --red:#FF5A5F;
+    --green:#34C77B;
+    --blue:#4A9EFF;
+    --radius:22px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(120% 100% at 50% 0%, var(--navy-light) 0%, var(--navy) 45%, var(--navy-deep) 100%);
+    color:var(--white);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding-top:calc(var(--safe-top) + 18px);
+    padding-bottom:calc(var(--safe-bottom) + 18px);
+    position:relative;
+  }
+  .screen{ display:none; flex:1; flex-direction:column; padding:0 22px; animation:fadeIn .35s ease; }
+  .screen.active{ display:flex; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  /* ---------- Splash ---------- */
+  #splash{ align-items:center; justify-content:center; text-align:center; gap:22px; }
+  .beacon{
+    width:120px; height:120px; border-radius:50%;
+    position:relative; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 50%, #16305B 0%, #0E2140 70%);
+    box-shadow:0 0 0 1px rgba(255,255,255,.06);
+  }
+  .beacon::before{
+    content:"";
+    position:absolute; inset:-40px;
+    border-radius:50%;
+    background:conic-gradient(from 0deg, transparent 0deg, var(--beam-soft) 18deg, transparent 40deg, transparent 360deg);
+    animation:sweep 2.6s linear infinite;
+    filter:blur(1px);
+  }
+  @keyframes sweep{ to{ transform:rotate(360deg); } }
+  .beacon-core{
+    width:56px; height:56px; border-radius:50%;
+    background:radial-gradient(circle, var(--beam) 0%, #E08F1A 100%);
+    box-shadow:0 0 30px 6px rgba(255,194,75,.55);
+    z-index:2;
+  }
+  .brand{ font-size:34px; font-weight:800; letter-spacing:-0.5px; }
+  .tagline{ color:var(--muted); font-size:15px; max-width:280px; line-height:1.4; }
+  .primary-btn{
+    appearance:none; border:none; cursor:pointer;
+    background:linear-gradient(180deg, var(--beam) 0%, #E8A730 100%);
+    color:#231400; font-weight:700; font-size:17px;
+    padding:16px 28px; border-radius:999px; width:100%;
+    box-shadow:0 10px 24px rgba(255,194,75,.28);
+    transition:transform .15s ease;
+  }
+  .primary-btn:active{ transform:scale(.97); }
+  .ghost-btn{
+    appearance:none; border:1px solid rgba(255,255,255,.18); cursor:pointer;
+    background:transparent; color:var(--off); font-weight:600; font-size:15px;
+    padding:14px 22px; border-radius:999px; width:100%;
+  }
+  .ghost-btn:active{ background:rgba(255,255,255,.06); }
+  .small-link{ background:none; border:none; color:var(--muted); font-size:14px; text-decoration:underline; cursor:pointer; padding:8px; }
+
+  /* ---------- Locating ---------- */
+  #locating{ align-items:center; justify-content:center; text-align:center; gap:18px; }
+  .spinner{ width:46px; height:46px; border-radius:50%; border:3px solid rgba(255,255,255,.15); border-top-color:var(--beam); animation:spin 0.9s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+
+  /* ---------- Result ---------- */
+  #result{ padding-top:6px; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .topbar .lockup{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px; color:var(--muted); }
+  .icon-btn{ background:rgba(255,255,255,.08); border:none; color:var(--white); width:36px; height:36px; border-radius:50%; font-size:16px; cursor:pointer; }
+
+  .place-card{ text-align:center; margin:6px 0 22px; }
+  .flag{ font-size:52px; line-height:1; margin-bottom:8px; }
+  .country-name{ font-size:26px; font-weight:800; letter-spacing:-0.3px; }
+  .place-sub{ color:var(--muted); font-size:13px; margin-top:4px; }
+
+  .primary-call{
+    display:block; text-decoration:none;
+    background:linear-gradient(180deg,#FF6A6E 0%, var(--red) 100%);
+    border-radius:var(--radius);
+    padding:22px 20px;
+    text-align:center;
+    box-shadow:0 14px 30px rgba(255,90,95,.3);
+    margin-bottom:16px;
+  }
+  .primary-call .pc-label{ color:rgba(255,255,255,.85); font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+  .primary-call .pc-number{ color:#fff; font-size:44px; font-weight:800; margin-top:4px; letter-spacing:-1px; }
+  .primary-call .pc-hint{ color:rgba(255,255,255,.8); font-size:13px; margin-top:6px; }
+
+  .grid3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:18px; }
+  .svc-card{ background:var(--navy-light); border-radius:16px; padding:14px 8px; text-align:center; text-decoration:none; color:var(--white); border:1px solid rgba(255,255,255,.06); }
+  .svc-card .svc-emoji{ font-size:22px; }
+  .svc-card .svc-label{ font-size:11px; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:.5px; }
+  .svc-card .svc-number{ font-size:17px; font-weight:800; margin-top:2px; }
+  .svc-card.disabled{ opacity:.35; }
+
+  .notes-box{ background:rgba(255,255,255,.05); border-radius:16px; padding:14px 16px; font-size:13px; color:var(--off); line-height:1.5; margin-bottom:16px; }
+  .notes-box b{ color:var(--beam-soft); }
+
+  .disclaimer{ font-size:11.5px; color:var(--muted); line-height:1.5; text-align:center; padding:0 6px; margin-top:auto; }
+
+  /* ---------- Search ---------- */
+  #search{ padding-top:6px; }
+  .search-input{
+    width:100%; padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.06); color:var(--white); font-size:16px; margin-bottom:14px;
+  }
+  .search-input::placeholder{ color:var(--muted); }
+  .country-list{ list-style:none; margin:0; padding:0; overflow-y:auto; flex:1; }
+  .country-row{ display:flex; align-items:center; gap:12px; padding:13px 4px; border-bottom:1px solid rgba(255,255,255,.06); cursor:pointer; }
+  .country-row .flag{ font-size:24px; margin:0; }
+  .country-row .cn{ font-size:15px; font-weight:600; }
+  .country-row .cg{ margin-left:auto; color:var(--muted); font-size:13px; }
+
+  .header-row{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .header-row h2{ font-size:20px; margin:0; }
+
+  /* ---------- City Guide ---------- */
+  .city-card{ background:linear-gradient(180deg, rgba(74,158,255,.14) 0%, rgba(74,158,255,.05) 100%); border:1px solid rgba(74,158,255,.25); border-radius:18px; padding:16px; margin-bottom:16px; }
+  .city-card h3{ margin:0 0 10px; font-size:14px; color:var(--blue); text-transform:uppercase; letter-spacing:.6px; display:flex; align-items:center; gap:6px; }
+  .city-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.08); }
+  .city-row:last-of-type{ border-bottom:none; }
+  .city-row .cr-label{ font-size:12px; color:var(--muted); }
+  .city-row .cr-name{ font-size:14px; font-weight:600; margin-top:1px; }
+  .city-row a.cr-call{ color:var(--blue); text-decoration:none; font-weight:700; font-size:14px; white-space:nowrap; }
+  .phrase-box{ margin-top:10px; background:rgba(0,0,0,.18); border-radius:12px; padding:10px 12px; }
+  .phrase-box .ph-lang{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+  .phrase-box .ph-text{ font-size:16px; font-weight:700; margin-top:3px; }
+  .phrase-box .ph-meaning{ font-size:12px; color:var(--muted); margin-top:2px; }
+
+  .featured-wrap{ margin-bottom:18px; }
+  .featured-title{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px; }
+  .featured-scroll{ display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
+  .featured-chip{ flex:0 0 auto; display:flex; align-items:center; gap:6px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); border-radius:999px; padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .featured-chip:active{ background:rgba(255,255,255,.14); }
+
+  .fallback-tip{ background:rgba(255,194,75,.1); border:1px solid rgba(255,194,75,.28); border-radius:14px; padding:11px 13px; font-size:12px; color:var(--beam-soft); line-height:1.5; text-align:left; }
+  .fallback-tip b{ color:var(--beam); }
+
+  /* ---------- Bottom nav ---------- */
+  #app{ padding-bottom:0; }
+  .screen{ padding-bottom:calc(var(--safe-bottom) + 84px); }
+  .bottom-nav{ position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:100%; max-width:480px; display:flex; background:rgba(7,18,38,.96); border-top:1px solid rgba(255,255,255,.08); padding:8px 6px calc(var(--safe-bottom) + 8px); z-index:50; }
+  .nav-btn{ flex:1; background:none; border:none; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:2px; font-size:11px; font-weight:600; padding:6px 0; cursor:pointer; }
+  .nav-btn .nav-icon{ font-size:20px; }
+  .nav-btn.active{ color:var(--beam); }
+
+  /* ---------- Profile ---------- */
+  .form-section{ margin-bottom:20px; }
+  .form-section h3{ font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin:0 0 10px; }
+  .form-row{ margin-bottom:10px; }
+  .form-row label{ display:block; font-size:12px; color:var(--off); margin-bottom:5px; }
+  .form-row input[type=text], .form-row input[type=tel], .form-row input[type=date], .form-row select, .form-row textarea{
+    width:100%; padding:11px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.06); color:var(--white); font-size:14px; font-family:inherit;
+  }
+  .form-row textarea{ min-height:56px; resize:vertical; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip-check{ display:flex; align-items:center; gap:6px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15); border-radius:999px; padding:8px 14px; font-size:13px; cursor:pointer; }
+  .chip-check input{ accent-color:var(--beam); }
+  .chip-check.checked{ border-color:var(--beam); color:var(--beam); }
+  .medid-card{ background:linear-gradient(180deg, rgba(255,90,95,.16) 0%, rgba(255,90,95,.05) 100%); border:1px solid rgba(255,90,95,.3); border-radius:16px; padding:14px 16px; margin-bottom:14px; }
+  .medid-card h3{ color:#FF8A8E; margin:0 0 8px; font-size:12px; text-transform:uppercase; letter-spacing:.6px; }
+  .medid-row{ font-size:13px; color:var(--off); margin-bottom:4px; }
+  .medid-row b{ color:var(--white); }
+  .privacy-note{ font-size:11px; color:var(--muted); line-height:1.5; background:rgba(255,255,255,.05); border-radius:10px; padding:10px 12px; margin-bottom:16px; }
+  .danger-link{ background:none; border:none; color:#FF8A8E; font-size:13px; text-decoration:underline; cursor:pointer; padding:6px; }
+
+  /* ---------- Embassy ---------- */
+  .embassy-card{ background:var(--navy-light); border-radius:16px; padding:14px 16px; margin-bottom:12px; border:1px solid rgba(255,255,255,.06); }
+  .embassy-card .em-flag{ font-size:20px; }
+  .embassy-card h4{ margin:6px 0 4px; font-size:15px; font-weight:700; }
+  .embassy-card .em-detail{ font-size:13px; color:var(--off); margin-bottom:2px; }
+  .embassy-card a.em-call{ display:inline-block; margin-top:8px; color:var(--blue); font-weight:700; text-decoration:none; font-size:13px; }
+  .embassy-card a.em-link{ display:inline-block; margin-top:8px; background:var(--beam); color:#231400; font-weight:700; text-decoration:none; font-size:13px; padding:9px 16px; border-radius:999px; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SPLASH -->
+  <div class="screen active" id="splash">
+    <div id="home-medid-strip" style="display:none; width:100%;"></div>
+    <div class="beacon"><div class="beacon-core"></div></div>
+    <div class="brand">Lighthouse</div>
+    <div class="tagline">Wherever you are in the world, know exactly who to call for help — instantly.</div>
+    <div style="width:100%; display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+      <button class="primary-btn" onclick="requestLocation()">Find my local emergency numbers</button>
+      <button class="ghost-btn" onclick="showSearch()">Search for a country manually</button>
+    </div>
+    <div class="fallback-tip" style="margin-top:8px;"><b>If this ever fails you:</b> in many countries, dialing <b>112</b> (or <b>911</b>) connects you to local emergency services even without the exact number, no signal from your own carrier, or even a SIM card. It's not guaranteed everywhere — but it's worth trying.</div>
+  </div>
+
+  <!-- LOCATING -->
+  <div class="screen" id="locating">
+    <div class="spinner"></div>
+    <div style="font-weight:700; font-size:17px; margin-top:4px;">Finding you…</div>
+    <div class="tagline" id="locating-sub">Getting your location, then matching it to local emergency services.</div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="result">
+    <div class="topbar">
+      <div class="lockup">🗼 Lighthouse</div>
+      <button class="icon-btn" onclick="requestLocation()" title="Refresh location">⟳</button>
+    </div>
+    <div class="place-card">
+      <div class="flag" id="r-flag">🌍</div>
+      <div class="country-name" id="r-country">—</div>
+      <div class="place-sub" id="r-sub">Emergency numbers for this location</div>
+    </div>
+
+    <a class="primary-call" id="r-primary" href="tel:112">
+      <div class="pc-label" id="r-primary-label">General Emergency</div>
+      <div class="pc-number" id="r-primary-number">112</div>
+      <div class="pc-hint">Tap to call now</div>
+    </a>
+
+    <div class="grid3">
+      <a class="svc-card" id="r-police" href="tel:">
+        <div class="svc-emoji">👮</div>
+        <div class="svc-label">Police</div>
+        <div class="svc-number">—</div>
+      </a>
+      <a class="svc-card" id="r-ambulance" href="tel:">
+        <div class="svc-emoji">🚑</div>
+        <div class="svc-label">Ambulance</div>
+        <div class="svc-number">—</div>
+      </a>
+      <a class="svc-card" id="r-fire" href="tel:">
+        <div class="svc-emoji">🚒</div>
+        <div class="svc-label">Fire</div>
+        <div class="svc-number">—</div>
+      </a>
+    </div>
+
+    <div class="notes-box" id="r-notes" style="display:none;"></div>
+
+    <div id="r-city" style="display:none;"></div>
+
+    <button class="small-link" onclick="showSearch()" style="align-self:center;">Not the right place? Search manually</button>
+
+    <div class="fallback-tip" style="margin-bottom:14px;"><b>Number not working?</b> Try <b>112</b> or <b>911</b> — many phones connect these to local emergency services as a backup, even here. Not guaranteed in every country, but worth a try.</div>
+
+    <div class="disclaimer">Numbers are gathered from public sources and may change. If you're in immediate danger, use any means available to reach help — don't wait on this app.</div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="screen" id="search">
+    <div class="header-row">
+      <button class="icon-btn" onclick="goBack()">←</button>
+      <h2>Choose a country</h2>
+    </div>
+    <input class="search-input" id="search-input" placeholder="Search country name…" oninput="renderCountryList(this.value); toggleFeatured(this.value);">
+    <div class="featured-wrap" id="featured-wrap">
+      <div class="featured-title">Featured city guides</div>
+      <div class="featured-scroll" id="featured-scroll"></div>
+    </div>
+    <ul class="country-list" id="country-list"></ul>
+    <div class="fallback-tip" style="margin-top:6px;"><b>Can't find it, or out of time?</b> Try dialing <b>112</b> or <b>911</b> — many phones route these to local emergency services as a backup, even without the exact number.</div>
+  </div>
+
+  <!-- EMBASSY -->
+  <div class="screen" id="embassy">
+    <div class="header-row"><h2>Your embassy</h2></div>
+    <div id="embassy-body"></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="screen" id="profile">
+    <div class="header-row"><h2>Profile</h2></div>
+    <div class="privacy-note">Everything here is saved only on this device (nothing is sent anywhere). If you hand your phone to someone helping you, they'd only see this if they open the Profile tab — your Medical ID card is the one thing designed to be shown to a responder.</div>
+
+    <div class="form-section">
+      <h3>Medical ID — safe to show a responder</h3>
+      <div class="form-row"><label>Blood type</label>
+        <select id="p-blood">
+          <option value="">Unknown</option>
+          <option>O+</option><option>O-</option><option>A+</option><option>A-</option>
+          <option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Allergies</label><input type="text" id="p-allergies" placeholder="e.g. Penicillin, peanuts"></div>
+      <div class="form-row"><label>Medical conditions</label><input type="text" id="p-conditions" placeholder="e.g. Type 1 diabetes, epilepsy"></div>
+      <div class="form-row"><label>Current medications</label><input type="text" id="p-medications" placeholder="e.g. Insulin"></div>
+      <div class="form-row"><label>Emergency contact name</label><input type="text" id="p-ice-name" placeholder="e.g. Mum — Jane Smith"></div>
+      <div class="form-row"><label>Emergency contact phone</label><input type="tel" id="p-ice-phone" placeholder="+44 7..."></div>
+    </div>
+
+    <div class="form-section">
+      <h3>Languages</h3>
+      <div class="form-row"><label>Languages you speak</label><input type="text" id="p-languages" placeholder="e.g. English, French"></div>
+    </div>
+
+    <div class="form-section">
+      <h3>Citizenship / passport — private, for your reference</h3>
+      <div class="form-row">
+        <label>Citizenship(s) — used to find your embassy</label>
+        <div class="chip-row" id="p-citizenship-chips">
+          <label class="chip-check"><input type="checkbox" value="UK" onchange="this.parentElement.classList.toggle('checked', this.checked)"> British</label>
+          <label class="chip-check"><input type="checkbox" value="US" onchange="this.parentElement.classList.toggle('checked', this.checked)"> American</label>
+          <label class="chip-check"><input type="checkbox" value="DE" onchange="this.parentElement.classList.toggle('checked', this.checked)"> German</label>
+          <label class="chip-check"><input type="checkbox" value="FR" onchange="this.parentElement.classList.toggle('checked', this.checked)"> French</label>
+          <label class="chip-check"><input type="checkbox" value="CA" onchange="this.parentElement.classList.toggle('checked', this.checked)"> Canadian</label>
+          <label class="chip-check"><input type="checkbox" value="AU" onchange="this.parentElement.classList.toggle('checked', this.checked)"> Australian</label>
+        </div>
+      </div>
+      <div class="form-row"><label>Other citizenship (if not listed)</label><input type="text" id="p-citizenship-other" placeholder="e.g. Irish"></div>
+      <div class="form-row"><label>Passport number (optional — stored on this device only)</label><input type="text" id="p-passport-number" placeholder="Optional"></div>
+      <div class="form-row"><label>Passport expiry</label><input type="date" id="p-passport-expiry"></div>
+    </div>
+
+    <div class="form-section">
+      <h3>Home address(es)</h3>
+      <div class="form-row"><label>Home country address</label><textarea id="p-home-address" placeholder="Your permanent address"></textarea></div>
+      <div class="form-row"><label>Current / local address</label><textarea id="p-local-address" placeholder="Where you're staying now"></textarea></div>
+    </div>
+
+    <button class="primary-btn" id="save-profile-btn" onclick="saveProfile(this)">Save profile</button>
+    <div style="text-align:center; margin-top:10px;"><button class="danger-link" onclick="clearProfile()">Clear all my data</button></div>
+  </div>
+
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="switchTab('home')"><span class="nav-icon">🏠</span>Home</button>
+  <button class="nav-btn" id="nav-embassy" onclick="switchTab('embassy')"><span class="nav-icon">🛂</span>Embassy</button>
+  <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')"><span class="nav-icon">👤</span>Profile</button>
+</div>
+
+<script>
+/* =========================================================
+   LIGHTHOUSE DATA
+   g = general/primary number, p = police, a = ambulance,
+   f = fire, x = extra notes. ISO 3166-1 alpha-2 codes used
+   as keys wherever possible so we can match GPS lookups
+   and auto-generate flag emojis.
+   Sourced from publicly documented emergency-number listings.
+   ========================================================= */
+const DATA = {
+DZ:{n:"Algeria",p:"1548",a:"14",x:"Gendarmerie – 1055"},
+AO:{n:"Angola",p:"113",a:"112",f:"115"},
+BJ:{n:"Benin",p:"117",a:"112",f:"118"},
+BI:{n:"Burundi",p:"117",a:"112",f:"118"},
+BW:{n:"Botswana",p:"999",a:"997",f:"998",x:"From mobile phones – 112"},
+BF:{n:"Burkina Faso",p:"17",a:"112",f:"18"},
+CM:{n:"Cameroon",g:"112",p:"117",a:"119",f:"118",x:"Electricity emergency – 8010"},
+CV:{n:"Cape Verde",p:"132",a:"130",f:"131"},
+CF:{n:"Central African Republic",p:"117",a:"1220",f:"118"},
+TD:{n:"Chad",p:"17",a:"2251-4242",f:"18"},
+KM:{n:"Comoros",p:"17",a:"772-03-73",f:"18"},
+CG:{n:"Republic of the Congo",p:"117",f:"118"},
+CD:{n:"DR Congo",p:"112",f:"118"},
+DJ:{n:"Djibouti",p:"17",a:"19",f:"18"},
+EG:{n:"Egypt",p:"112 or 122",a:"123",f:"180",x:"Tourist police – 126 · Traffic police – 128"},
+GQ:{n:"Equatorial Guinea",p:"114",a:"115",f:"112",x:"Traffic police – 116"},
+ER:{n:"Eritrea",p:"113",a:"114",f:"116",x:"Emergency call – 112"},
+SZ:{n:"Eswatini",p:"999",a:"977",f:"933"},
+ET:{n:"Ethiopia",g:"911",p:"991",a:"907",f:"939",x:"Traffic police – 945"},
+GA:{n:"Gabon",p:"1730",a:"1300",f:"18"},
+GM:{n:"Gambia",p:"117",a:"116",f:"118",x:"Police – 112"},
+GH:{n:"Ghana",g:"112",p:"191",a:"193",f:"192"},
+GN:{n:"Guinea",p:"117",a:"18",f:"442-020"},
+GW:{n:"Guinea-Bissau",g:"112",p:"117",a:"119",f:"118"},
+CI:{n:"Ivory Coast",p:"110 or 111 or 170",a:"185",f:"180"},
+LR:{n:"Liberia",g:"911"},
+KE:{n:"Kenya",g:"112 or 999 or 911"},
+LY:{n:"Libya",g:"1515",a:"193"},
+LS:{n:"Lesotho",p:"123",a:"121",f:"122"},
+MG:{n:"Madagascar",p:"117",a:"124",f:"118",x:"Traffic police – 3600"},
+MW:{n:"Malawi",p:"997",a:"998",f:"999"},
+ML:{n:"Mali",p:"17",a:"15",f:"18",x:"Ambulance/Fire also reachable on 112"},
+MR:{n:"Mauritania",p:"117",a:"101",f:"118",x:"Gendarmerie – 116"},
+MU:{n:"Mauritius",p:"112",a:"114",f:"115",x:"Police alt – 999 · Fire alt – 995"},
+YT:{n:"Mayotte",g:"112",p:"17",a:"15",f:"18"},
+MA:{n:"Morocco",p:"19",a:"15",x:"Royal gendarmerie – 177"},
+MZ:{n:"Mozambique",p:"119",a:"117",f:"198"},
+NA:{n:"Namibia",g:"10 111",x:"May vary by town/city"},
+NE:{n:"Niger",p:"17",a:"15",f:"18"},
+NG:{n:"Nigeria",g:"112"},
+RE:{n:"Réunion",g:"112",p:"17",a:"15",f:"18"},
+RW:{n:"Rwanda",g:"112",a:"912",x:"Traffic police – 113"},
+SH:{n:"Saint Helena",g:"999"},
+ST:{n:"São Tomé and Príncipe",g:"112"},
+SN:{n:"Senegal",p:"17",a:"18",f:"1515"},
+SC:{n:"Seychelles",g:"112 or 999",p:"133",a:"151"},
+SL:{n:"Sierra Leone",g:"999",p:"019"},
+SO:{n:"Somalia",p:"888",a:"999",f:"555",x:"Traffic police – 777"},
+ZA:{n:"South Africa",g:"10 111",x:"Mobile phones – 112 · Cape Town – 107"},
+SD:{n:"Sudan",g:"999"},
+SS:{n:"South Sudan",g:"999"},
+TZ:{n:"Tanzania",p:"112",a:"114",f:"115",x:"Police alt – 999"},
+TG:{n:"Togo",p:"117",a:"8200",f:"118"},
+TN:{n:"Tunisia",p:"197",a:"190",f:"198",x:"National guard – 193"},
+UG:{n:"Uganda",p:"112",a:"911",f:"112"},
+EH:{n:"Western Sahara",g:"150"},
+ZM:{n:"Zambia",g:"999",x:"Mobile phones – 112"},
+ZW:{n:"Zimbabwe",g:"999",x:"Mobile phones – 112"},
+
+AI:{n:"Anguilla",g:"911"},
+AG:{n:"Antigua and Barbuda",g:"911 or 999"},
+AW:{n:"Aruba",g:"911"},
+BS:{n:"The Bahamas",g:"911 or 919",x:"Mobile phones – 112"},
+BB:{n:"Barbados",p:"211",a:"511",f:"311"},
+BM:{n:"Bermuda",g:"911"},
+VG:{n:"British Virgin Islands",g:"911 or 999"},
+BQ:{n:"Caribbean Netherlands",g:"911"},
+KY:{n:"Cayman Islands",g:"911"},
+CU:{n:"Cuba",p:"106",a:"104",f:"105"},
+CW:{n:"Curaçao",p:"911",a:"910 and 912",f:"911"},
+DM:{n:"Dominica",g:"999"},
+DO:{n:"Dominican Republic",g:"911",x:"112 redirects to 911 on mobiles"},
+GD:{n:"Grenada",g:"911"},
+GP:{n:"Guadeloupe",g:"112",p:"17",a:"15",f:"18"},
+HT:{n:"Haiti",p:"114",a:"116",f:"115"},
+JM:{n:"Jamaica",p:"119",a:"110"},
+MQ:{n:"Martinique",g:"112",p:"17",a:"15",f:"18"},
+MS:{n:"Montserrat",g:"911 or 999"},
+PR:{n:"Puerto Rico",g:"911"},
+BL:{n:"Saint Barthélemy",p:"17",a:"18"},
+KN:{n:"Saint Kitts and Nevis",g:"911"},
+LC:{n:"Saint Lucia",g:"911 or 999"},
+MF:{n:"Saint Martin",p:"17",a:"15",f:"18"},
+VC:{n:"Saint Vincent and the Grenadines",g:"999 or 911 or 112"},
+SX:{n:"Sint Maarten",p:"911",a:"912",f:"919"},
+TT:{n:"Trinidad and Tobago",g:"999 or 911"},
+TC:{n:"Turks and Caicos",g:"911"},
+VI:{n:"U.S. Virgin Islands",g:"911"},
+
+BZ:{n:"Belize",g:"911"},
+CR:{n:"Costa Rica",g:"911",x:"Mobile phones – 112"},
+SV:{n:"El Salvador",p:"911",a:"132",f:"913"},
+GT:{n:"Guatemala",p:"110",a:"128",f:"122"},
+HN:{n:"Honduras",p:"911",a:"195",f:"198"},
+NI:{n:"Nicaragua",p:"118",a:"128",f:"115",x:"Fire alt – 911"},
+PA:{n:"Panama",g:"911",x:"Police – 104 · Fire – 103"},
+
+CA:{n:"Canada",g:"911",x:"Suicide & crisis hotline – 988"},
+MX:{n:"Mexico",g:"911"},
+PM:{n:"Saint Pierre and Miquelon",g:"112",p:"17",a:"15",f:"18"},
+US:{n:"United States",g:"911",x:"Suicide & crisis lifeline – 988"},
+
+AR:{n:"Argentina",g:"911",x:"Police – 101 · Ambulance – 107 · Fire – 100"},
+BO:{n:"Bolivia",g:"911",x:"Police – 110 · Ambulance – 118 · Fire – 119"},
+BR:{n:"Brazil",p:"190",a:"192",f:"193"},
+CL:{n:"Chile",p:"133",a:"131",f:"132"},
+CO:{n:"Colombia",g:"112",x:"General emergency line – 123"},
+EC:{n:"Ecuador",g:"911",x:"Police – 101 · Ambulance – 131 · Fire – 102"},
+FK:{n:"Falkland Islands",g:"112 or 999"},
+GF:{n:"French Guiana",g:"112",p:"17",a:"15",f:"18"},
+GY:{n:"Guyana",p:"911",a:"913",f:"912"},
+PY:{n:"Paraguay",g:"911",x:"Police – 912 · Ambulance – 141 · Fire – 132"},
+PE:{n:"Peru",g:"911",x:"Police – 105 · Ambulance – 106 · Fire – 116"},
+GS:{n:"South Georgia & S. Sandwich Isl.",g:"999"},
+SR:{n:"Suriname",g:"115"},
+UY:{n:"Uruguay",g:"911",x:"Police – 109 · Ambulance – 105 · Fire – 104"},
+VE:{n:"Venezuela",g:"911 and 171"},
+
+AF:{n:"Afghanistan",p:"119",a:"112",f:"119"},
+BH:{n:"Bahrain",g:"999",x:"Mobile phones – 112"},
+BD:{n:"Bangladesh",g:"999"},
+BT:{n:"Bhutan",p:"113",a:"112",f:"110"},
+BN:{n:"Brunei",p:"993",a:"991",f:"995",x:"Search & rescue – 998"},
+KH:{n:"Cambodia",p:"117",a:"119",f:"118"},
+CN:{n:"China",p:"110",a:"120",f:"119",x:"Traffic accidents – 122"},
+TL:{n:"East Timor (Timor-Leste)",g:"112"},
+HK:{n:"Hong Kong",g:"999",x:"Mobile phones – 112 (redirects to 999)"},
+IN:{n:"India",g:"112"},
+ID:{n:"Indonesia",g:"112",x:"Police – 110 · Ambulance – 118/119 · Fire – 113"},
+IR:{n:"Iran",p:"110",a:"115",f:"125"},
+IQ:{n:"Iraq",g:"112 or 911",x:"Police – 104 · Ambulance – 122 · Fire – 115"},
+IL:{n:"Israel",p:"100",a:"101",f:"102"},
+JP:{n:"Japan",p:"110",a:"119"},
+JO:{n:"Jordan",g:"911",x:"Mobile phones – 112"},
+KZ:{n:"Kazakhstan",g:"112",x:"Police – 102 · Ambulance – 103 · Fire – 101"},
+KP:{n:"North Korea",g:"110",x:"Emergency access is highly restricted; dial local police (110) or 8119 where available"},
+KR:{n:"South Korea",p:"112",a:"119"},
+KW:{n:"Kuwait",g:"112"},
+KG:{n:"Kyrgyzstan",g:"112"},
+LA:{n:"Laos",p:"191",a:"195",f:"190"},
+LB:{n:"Lebanon",g:"999 or 112",a:"140",f:"175"},
+MO:{n:"Macau",g:"999",x:"Mobile phones – 110 or 112"},
+MY:{n:"Malaysia",g:"999",x:"Mobile phones – 112"},
+MV:{n:"Maldives",g:"911",x:"Police – 119 · Ambulance – 100 · Fire – 118"},
+MN:{n:"Mongolia",g:"105",x:"Police – 102 · Ambulance – 103 · Fire – 101"},
+MM:{n:"Myanmar",g:"999",x:"Police – 199 · Ambulance – 192 · Fire – 191"},
+NP:{n:"Nepal",p:"100",a:"102",f:"101"},
+OM:{n:"Oman",g:"9999",x:"Mobile phones – 112"},
+PK:{n:"Pakistan",p:"15",a:"1122",f:"16"},
+PH:{n:"Philippines",g:"911"},
+QA:{n:"Qatar",g:"999",x:"Mobile phones – 112"},
+SA:{n:"Saudi Arabia",g:"911",x:"Police – 999 · Ambulance – 997 · Fire – 998"},
+SG:{n:"Singapore",g:"999",x:"Fire/ambulance – 995"},
+LK:{n:"Sri Lanka",p:"119",a:"110"},
+SY:{n:"Syria",p:"112",a:"110",f:"113"},
+TW:{n:"Taiwan",p:"110",a:"119"},
+TJ:{n:"Tajikistan",g:"112",x:"Police – 102 · Ambulance – 103 · Fire – 101"},
+TH:{n:"Thailand",p:"191",a:"1669",f:"199"},
+TM:{n:"Turkmenistan",g:"03",x:"Ambulance – 03 · Police – 02 · Fire – 01 (mobile: Fire 001 · Police 002 · Ambulance 003)"},
+AE:{n:"United Arab Emirates",g:"999",x:"Ambulance – 998 · Fire – 997"},
+UZ:{n:"Uzbekistan",p:"102",a:"103",f:"101"},
+VN:{n:"Vietnam",p:"113",a:"115",f:"114"},
+YE:{n:"Yemen",p:"194",a:"191"},
+
+AL:{n:"Albania",p:"129",a:"127",f:"128"},
+AD:{n:"Andorra",p:"110",a:"116",f:"118"},
+AM:{n:"Armenia",g:"112 or 911",x:"Police – 102 · Ambulance – 103 · Fire – 101"},
+AT:{n:"Austria",g:"112 or 133",a:"144",f:"122"},
+AZ:{n:"Azerbaijan",g:"112"},
+BY:{n:"Belarus",p:"102",a:"103",f:"101"},
+BE:{n:"Belgium",g:"101 or 112"},
+BA:{n:"Bosnia and Herzegovina",p:"122",a:"124",f:"123"},
+BG:{n:"Bulgaria",g:"112"},
+HR:{n:"Croatia",g:"112"},
+CY:{n:"Cyprus",g:"112 or 199"},
+CZ:{n:"Czech Republic",g:"112"},
+DK:{n:"Denmark",g:"112"},
+EE:{n:"Estonia",g:"112"},
+FO:{n:"Faroe Islands",g:"112"},
+FI:{n:"Finland",g:"112"},
+FR:{n:"France",g:"112",x:"Police – 17 · Ambulance – 15 · Fire – 18"},
+GE:{n:"Georgia",g:"112"},
+DE:{n:"Germany",p:"110",f:"112",x:"112 also covers ambulance"},
+GI:{n:"Gibraltar",g:"199 or 112 or 999"},
+GR:{n:"Greece",p:"100",a:"166",f:"199",x:"General emergency – 112"},
+GL:{n:"Greenland",g:"112"},
+GG:{n:"Guernsey",g:"112 or 999"},
+HU:{n:"Hungary",g:"112"},
+IS:{n:"Iceland",g:"112"},
+IE:{n:"Ireland",g:"112 or 999"},
+IM:{n:"Isle of Man",g:"112 or 999"},
+IT:{n:"Italy",g:"112"},
+JE:{n:"Jersey",g:"112 or 999"},
+XK:{n:"Kosovo",p:"192",a:"194",f:"193"},
+LV:{n:"Latvia",g:"112"},
+LT:{n:"Lithuania",g:"112"},
+LI:{n:"Liechtenstein",p:"117",a:"144",f:"118"},
+LU:{n:"Luxembourg",g:"112",x:"Police – 113"},
+MT:{n:"Malta",g:"112"},
+MD:{n:"Moldova",g:"112"},
+MC:{n:"Monaco",p:"17",f:"112 or 18"},
+ME:{n:"Montenegro",g:"112"},
+NL:{n:"Netherlands",g:"112"},
+MK:{n:"North Macedonia",g:"112"},
+NO:{n:"Norway",p:"112",a:"113",f:"110"},
+PL:{n:"Poland",g:"112"},
+PT:{n:"Portugal",g:"112"},
+RO:{n:"Romania",g:"112"},
+RU:{n:"Russia",g:"112"},
+SM:{n:"San Marino",p:"113",a:"118",f:"115"},
+RS:{n:"Serbia",g:"112"},
+SK:{n:"Slovakia",p:"158",a:"155",f:"150"},
+SI:{n:"Slovenia",g:"112"},
+ES:{n:"Spain",g:"112"},
+SE:{n:"Sweden",g:"112"},
+CH:{n:"Switzerland",p:"117",a:"144",f:"118"},
+TR:{n:"Turkey",g:"112"},
+UA:{n:"Ukraine",g:"112",x:"Police – 102 · Ambulance – 103 · Fire – 101"},
+GB:{n:"United Kingdom",g:"999 or 112"},
+VA:{n:"Vatican City",g:"112",x:"Police – 113 · Ambulance – 118 · Fire – 115"},
+
+AS:{n:"American Samoa",g:"911"},
+AU:{n:"Australia",g:"000",x:"Mobile phones – 112 or 000"},
+CK:{n:"Cook Islands",g:"999"},
+FJ:{n:"Fiji",g:"911",x:"Police – 917 · Fire – 910"},
+PF:{n:"French Polynesia",g:"112"},
+GU:{n:"Guam",g:"911"},
+KI:{n:"Kiribati",g:"100 or 999"},
+MH:{n:"Marshall Islands",g:"911"},
+FM:{n:"Micronesia",g:"911"},
+NR:{n:"Nauru",p:"110",a:"111",f:"112"},
+NC:{n:"New Caledonia",g:"112"},
+NZ:{n:"New Zealand",g:"111"},
+MP:{n:"Northern Mariana Islands",g:"911"},
+PW:{n:"Palau",g:"911"},
+PG:{n:"Papua New Guinea",p:"112",a:"111",f:"110"},
+WS:{n:"Samoa",g:"999",x:"Police – 995 · Ambulance – 996 · Fire – 994"},
+SB:{n:"Solomon Islands",g:"911 or 999"},
+TO:{n:"Tonga",g:"911",x:"Police – 922 · Ambulance – 933 · Fire – 999"},
+TV:{n:"Tuvalu",g:"911"},
+VU:{n:"Vanuatu",p:"111",a:"112",f:"113"},
+WF:{n:"Wallis and Futuna",p:"15"}
+};
+
+/* Aliases: alternate country-name strings some geocoders return,
+   mapped to our ISO2 keys. */
+const NAME_ALIASES = {
+  "united states of america":"US","usa":"US","russian federation":"RU",
+  "czechia":"CZ","ivory coast":"CI","côte d’ivoire":"CI","cote d'ivoire":"CI",
+  "democratic republic of the congo":"CD","congo-kinshasa":"CD",
+  "republic of the congo":"CG","congo-brazzaville":"CG",
+  "people's republic of china":"CN","hong kong sar":"HK","macao":"MO","macau sar":"MO",
+  "republic of korea":"KR","korea, republic of":"KR","south korea":"KR",
+  "democratic people's republic of korea":"KP","north korea":"KP",
+  "myanmar (burma)":"MM","burma":"MM","timor-leste":"TL","east timor":"TL",
+  "cabo verde":"CV","swaziland":"SZ","the bahamas":"BS","bahamas, the":"BS",
+  "gambia, the":"GM","türkiye":"TR","turkiye":"TR","vatican":"VA","holy see":"VA",
+  "micronesia, federated states of":"FM","st. martin":"MF","saint martin (french part)":"MF",
+  "sint maarten (dutch part)":"SX","brunei darussalam":"BN","laos":"LA",
+  "lao people's democratic republic":"LA","viet nam":"VN","syrian arab republic":"SY",
+  "iran, islamic republic of":"IR","moldova, republic of":"MD","tanzania, united republic of":"TZ",
+  "united republic of tanzania":"TZ","cape verde":"CV"
+};
+
+/* =========================================================
+   CITY GUIDES — hand-verified depth for 10 launch cities.
+   Hospitals, tourist/non-emergency assistance lines, and a
+   backup local-language phrase in case an operator doesn't
+   speak English. Sourced from hospital/tourism/police sites.
+   ========================================================= */
+const CITY_DATA = {
+  "lu-luxembourg":{
+    code:"LU", name:"Luxembourg City",
+    hospitals:[
+      {name:"Centre Hospitalier de Luxembourg (CHL)", phone:"+352 4411 1"},
+      {name:"Hôpital Kirchberg", phone:"+352 2468 1"}
+    ],
+    assist:{label:"Police non-emergency", number:"+352 244 244 244"},
+    tip:"CHL and Kirchberg alternate emergency shifts — call 112 and they'll tell you which one is open.",
+    phrase:{lang:"French", text:"Au secours, appelez une ambulance !", meaning:"Help, call an ambulance!"}
+  },
+  "de-berlin":{
+    code:"DE", name:"Berlin",
+    hospitals:[{name:"Charité Campus Mitte — Emergency Dept.", phone:"+49 30 450 531 000"}],
+    assist:{label:"Police non-emergency", number:"030 4664 4664"},
+    tip:"112 operators are trained to handle calls in English.",
+    phrase:{lang:"German", text:"Hilfe! Rufen Sie einen Krankenwagen!", meaning:"Help! Call an ambulance!"}
+  },
+  "nl-amsterdam":{
+    code:"NL", name:"Amsterdam",
+    hospitals:[{name:"OLVG Hospital (East/West) — 24hr ER", phone:"020 599 9111"}],
+    assist:{label:"Police non-emergency", number:"0900 8844"},
+    tip:"112 is free, no SIM required, and English-speaking.",
+    phrase:{lang:"Dutch", text:"Help! Bel een ambulance!", meaning:"Help! Call an ambulance!"}
+  },
+  "es-barcelona":{
+    code:"ES", name:"Barcelona",
+    hospitals:[
+      {name:"Hospital Clínic (metro L5 – Hospital Clínic)", phone:""},
+      {name:"Hospital de la Santa Creu i Sant Pau", phone:""}
+    ],
+    assist:{label:"Mossos d'Esquadra (regional police)", number:"088"},
+    tip:"Guàrdia Urbana (local police, non-emergency) – 092.",
+    phrase:{lang:"Spanish", text:"¡Ayuda! ¡Llame a una ambulancia!", meaning:"Help! Call an ambulance!"}
+  },
+  "ae-dubai":{
+    code:"AE", name:"Dubai",
+    hospitals:[{name:"Rashid Hospital (Oud Metha)", phone:"04 219 1000"}],
+    assist:{label:"Tourist Police", number:"8004438"},
+    tip:"Dubai Police non-emergency line – 901.",
+    phrase:{lang:"Arabic", text:"النجدة! اتصلوا بالإسعاف!", meaning:"Help! Call the ambulance! (transliteration: an-najda, ittasilu bil-is'af)"}
+  },
+  "sg-singapore":{
+    code:"SG", name:"Singapore",
+    hospitals:[{name:"Singapore General Hospital — Emergency", phone:"6321 4311"}],
+    assist:{label:"Police non-emergency hotline", number:"1800 255 0000"},
+    tip:"English is an official language — dispatchers speak English.",
+    phrase:{lang:"Mandarin", text:"救命！叫救护车！", meaning:"Help! Call an ambulance! (jiùmìng! jiào jiùhùchē!)"}
+  },
+  "jp-tokyo":{
+    code:"JP", name:"Tokyo",
+    hospitals:[{name:"St. Luke's International Hospital (Tsukiji)", phone:""}],
+    assist:{label:"Medical consultation hotline (#7119)", number:"7119"},
+    tip:"Say \"Eigo de onegaishimasu\" (英語でお願いします — \"English please\") to request an interpreter on the line.",
+    phrase:{lang:"Japanese", text:"助けて！救急車を呼んでください！", meaning:"Help! Please call an ambulance! (Tasukete! Kyūkyūsha o yonde kudasai!)"}
+  },
+  "th-bangkok":{
+    code:"TH", name:"Bangkok",
+    hospitals:[{name:"Bumrungrad International Hospital — ER", phone:"+66 2011 5222"}],
+    assist:{label:"Tourist Police (24hr, English-speaking)", number:"1155"},
+    tip:"Tourist Police can help with anything from crime reports to disputes, in English.",
+    phrase:{lang:"Thai", text:"ช่วยด้วย! เรียกรถพยาบาลด้วย!", meaning:"Help! Call an ambulance! (chuay duay! riak rot phayaban duay!)"}
+  },
+  "mx-mexicocity":{
+    code:"MX", name:"Mexico City",
+    hospitals:[{name:"Centro Médico ABC — Campus Santa Fe", phone:"55 1103 1666"}],
+    assist:{label:"LOCATEL (non-emergency helpline)", number:"55 5658 1111"},
+    tip:"Tourist-Aid Police: 5250 8221.",
+    phrase:{lang:"Spanish", text:"¡Ayuda! ¡Llame a una ambulancia!", meaning:"Help! Call an ambulance!"}
+  },
+  "za-capetown":{
+    code:"ZA", name:"Cape Town",
+    hospitals:[{name:"Groote Schuur Hospital — Emergency Unit", phone:"+27 21 404 5208"}],
+    assist:{label:"Tourism safety line", number:"0861 322 223"},
+    tip:"",
+    phrase:{lang:"Afrikaans", text:"Help! Bel 'n ambulans!", meaning:"Help! Call an ambulance!"}
+  }
+};
+
+const CITY_LOOKUP = {
+  "luxembourg":"lu-luxembourg","luxembourg city":"lu-luxembourg","luxembourg-ville":"lu-luxembourg",
+  "berlin":"de-berlin",
+  "amsterdam":"nl-amsterdam",
+  "barcelona":"es-barcelona",
+  "dubai":"ae-dubai",
+  "singapore":"sg-singapore",
+  "tokyo":"jp-tokyo","chiyoda":"jp-tokyo","shibuya":"jp-tokyo","shinjuku":"jp-tokyo","minato":"jp-tokyo","chuo":"jp-tokyo",
+  "bangkok":"th-bangkok","krung thep maha nakhon":"th-bangkok","phra nakhon":"th-bangkok",
+  "mexico city":"mx-mexicocity","ciudad de méxico":"mx-mexicocity","ciudad de mexico":"mx-mexicocity",
+  "cuauhtémoc":"mx-mexicocity","cuauhtemoc":"mx-mexicocity","miguel hidalgo":"mx-mexicocity","benito juárez":"mx-mexicocity","coyoacán":"mx-mexicocity",
+  "cape town":"za-capetown"
+};
+
+function findCityKey(localityRaw){
+  if(!localityRaw) return null;
+  const norm = localityRaw.trim().toLowerCase();
+  return CITY_LOOKUP[norm] || null;
+}
+
+function cleanTel(raw){
+  // Isolate the first alternative when a field lists options ("112 or 133" -> "112"),
+  // then strip formatting spaces/dashes from genuine multi-group numbers ("10 111" -> "10111").
+  let s = String(raw).trim().split(/\s+(?:or|and)\s+/i)[0];
+  return s.replace(/[^\d+]/g, "");
+}
+function telHref(raw){
+  return "tel:" + cleanTel(raw);
+}
+
+function renderCityCard(cityKey){
+  const box = document.getElementById("r-city");
+  if(!cityKey || !CITY_DATA[cityKey]){ box.style.display = "none"; box.innerHTML=""; return; }
+  const c = CITY_DATA[cityKey];
+  let html = `<div class="city-card"><h3>📍 ${c.name} city guide</h3>`;
+  c.hospitals.forEach(h=>{
+    html += `<div class="city-row"><div><div class="cr-label">Hospital / ER</div><div class="cr-name">${h.name}</div></div>`;
+    html += h.phone ? `<a class="cr-call" href="${telHref(h.phone)}">${h.phone}</a>` : "";
+    html += `</div>`;
+  });
+  if(c.assist){
+    html += `<div class="city-row"><div><div class="cr-label">${c.assist.label}</div></div><a class="cr-call" href="${telHref(c.assist.number)}">${c.assist.number}</a></div>`;
+  }
+  if(c.tip){
+    html += `<div class="city-row" style="border-bottom:none;"><div class="cr-label">Good to know</div></div><div style="font-size:13px; color:var(--off); margin-top:-4px;">${c.tip}</div>`;
+  }
+  if(c.phrase){
+    html += `<div class="phrase-box"><div class="ph-lang">If English isn't understood — say this (${c.phrase.lang})</div><div class="ph-text">${c.phrase.text}</div><div class="ph-meaning">${c.phrase.meaning}</div></div>`;
+  }
+  html += `</div>`;
+  box.innerHTML = html;
+  box.style.display = "block";
+}
+
+function renderFeaturedCities(){
+  const wrap = document.getElementById("featured-scroll");
+  if(!wrap) return;
+  wrap.innerHTML = "";
+  Object.entries(CITY_DATA).forEach(([key, c])=>{
+    const chip = document.createElement("div");
+    chip.className = "featured-chip";
+    chip.innerHTML = `<span>${flagEmoji(c.code)}</span><span>${c.name}</span>`;
+    chip.onclick = ()=> renderResult(c.code, {gps:false, cityKey:key});
+    wrap.appendChild(chip);
+  });
+}
+
+function toggleFeatured(filterVal){
+  const el = document.getElementById("featured-wrap");
+  if(!el) return;
+  el.style.display = (filterVal && filterVal.trim()) ? "none" : "block";
+}
+
+/* =========================================================
+   HOME NAV / PROFILE / EMBASSY
+   Profile data is stored ONLY in this browser's localStorage —
+   there is no backend, no account, no syncing. Medical ID is
+   deliberately separated from the rest of Profile since it's
+   the one thing meant to be shown to someone helping you.
+   ========================================================= */
+let LAST_LOCATION = null;
+let PROFILE = {};
+
+const EMBASSY_DATA = {
+  UK:{
+    "lu-luxembourg":{name:"British Embassy Luxembourg", address:"5 Boulevard Joseph II, L-1840 Luxembourg City", phone:"+352 22 98 64"},
+    "de-berlin":{name:"British Embassy Berlin", address:"Wilhelmstraße 70-71, 10117 Berlin", phone:"+49 30 204 570"},
+    "nl-amsterdam":{name:"British Consulate-General Amsterdam", address:"", phone:"+31 70 4270 427"},
+    "es-barcelona":{name:"British Consulate-General Barcelona", address:"Avenida Diagonal 477 - 13, 08036 Barcelona", phone:"+34 902 109 356"},
+    "ae-dubai":{name:"British Embassy Dubai", address:"Al Seef Road, Bur Dubai, Dubai", phone:"+971 4 309 4444"},
+    "sg-singapore":{name:"British High Commission Singapore", address:"100 Tanglin Road, Singapore 247919", phone:"+65 6424 4200"},
+    "jp-tokyo":{name:"British Embassy Tokyo", address:"1 Ichiban-cho, Chiyoda-ku, Tokyo 102-0082", phone:"+81 3 5211 1100"},
+    "th-bangkok":{name:"British Embassy Bangkok", address:"AIA Sathorn Tower, 12A Fl, 11/1 South Sathorn Rd, Bangkok 10120", phone:"+66 2 305 8333"},
+    "mx-mexicocity":{name:"British Embassy Mexico City", address:"Paseo de la Reforma 350, 20th Floor, Col. Juárez, 06600 Mexico City", phone:""},
+    "za-capetown":{name:"British Consulate-General Cape Town", address:"15th Floor, Norton Rose House, 8 Riebeek Street, Cape Town 8000", phone:"+44 203 481 1736"}
+  },
+  US:{
+    "lu-luxembourg":{name:"U.S. Embassy Luxembourg", address:"22 Boulevard Emmanuel Servais, L-2535 Luxembourg", phone:"+352 4601 2300"},
+    "de-berlin":{name:"U.S. Embassy Berlin", address:"Pariser Platz 2, 10117 Berlin", phone:"+49 30 8305 0"},
+    "nl-amsterdam":{name:"U.S. Consulate General Amsterdam", address:"Museumplein 19, 1071 DJ Amsterdam", phone:"+31 20 575 5309"},
+    "es-barcelona":{name:"U.S. Consulate General Barcelona", address:"Paseo Reina Elisenda de Montcada 23, 08034 Barcelona", phone:"+34 93 280 2227"},
+    "ae-dubai":{name:"U.S. Consulate General Dubai", address:"Corner of Al Seef Rd. and Sheikh Khalifa bin Zayed Rd, Dubai", phone:"+971 4 309 4000"},
+    "sg-singapore":{name:"U.S. Embassy Singapore", address:"27 Napier Road, Singapore 258508", phone:"+65 6476 9100"},
+    "jp-tokyo":{name:"U.S. Embassy Tokyo", address:"1-10-5 Akasaka, Minato-ku, Tokyo 107-8420", phone:"+81 3 3224 5000"},
+    "th-bangkok":{name:"U.S. Embassy Bangkok", address:"120/22 Wireless Road, Bangkok 10330", phone:"+66 2 205 4000"},
+    "mx-mexicocity":{name:"U.S. Embassy Mexico City", address:"Presa Angostura 225, Col. Irrigación, Miguel Hidalgo, 11500 Mexico City", phone:"+52 55 2579 2000"},
+    "za-capetown":{name:"U.S. Consulate General Cape Town", address:"2 Reddam Avenue, Westlake 7945, Cape Town", phone:"+27 21 702 7300"}
+  }
+};
+
+const EMBASSY_LINKS = {
+  UK:{label:"British", url:"https://www.gov.uk/world/embassies"},
+  US:{label:"American", url:"https://www.usembassy.gov/"},
+  DE:{label:"German", url:"https://www.auswaertiges-amt.de/en/aamt/auslandsseiten"},
+  FR:{label:"French", url:"https://www.diplomatie.gouv.fr/en/the-ministry-and-its-network/france-worldwide/"},
+  CA:{label:"Canadian", url:"https://travel.gc.ca/assistance/embassies-consulates"},
+  AU:{label:"Australian", url:"https://www.smartraveller.gov.au/consular-services/embassies"}
+};
+
+function loadProfile(){
+  try{
+    const raw = localStorage.getItem("lighthouse_profile");
+    PROFILE = raw ? JSON.parse(raw) : {};
+  }catch(e){ PROFILE = {}; }
+  return PROFILE;
+}
+
+function loadProfileForm(){
+  loadProfile();
+  document.getElementById("p-blood").value = PROFILE.blood || "";
+  document.getElementById("p-allergies").value = PROFILE.allergies || "";
+  document.getElementById("p-conditions").value = PROFILE.conditions || "";
+  document.getElementById("p-medications").value = PROFILE.medications || "";
+  document.getElementById("p-ice-name").value = PROFILE.iceName || "";
+  document.getElementById("p-ice-phone").value = PROFILE.icePhone || "";
+  document.getElementById("p-languages").value = PROFILE.languages || "";
+  document.getElementById("p-citizenship-other").value = PROFILE.citizenshipOther || "";
+  document.getElementById("p-passport-number").value = PROFILE.passportNumber || "";
+  document.getElementById("p-passport-expiry").value = PROFILE.passportExpiry || "";
+  document.getElementById("p-home-address").value = PROFILE.homeAddress || "";
+  document.getElementById("p-local-address").value = PROFILE.localAddress || "";
+  const citizenships = PROFILE.citizenships || [];
+  document.querySelectorAll("#p-citizenship-chips input[type=checkbox]").forEach(cb=>{
+    cb.checked = citizenships.includes(cb.value);
+    cb.parentElement.classList.toggle("checked", cb.checked);
+  });
+}
+
+function saveProfile(btn){
+  const citizenships = Array.from(document.querySelectorAll("#p-citizenship-chips input[type=checkbox]:checked")).map(cb=>cb.value);
+  PROFILE = {
+    blood: document.getElementById("p-blood").value,
+    allergies: document.getElementById("p-allergies").value,
+    conditions: document.getElementById("p-conditions").value,
+    medications: document.getElementById("p-medications").value,
+    iceName: document.getElementById("p-ice-name").value,
+    icePhone: document.getElementById("p-ice-phone").value,
+    languages: document.getElementById("p-languages").value,
+    citizenships: citizenships,
+    citizenshipOther: document.getElementById("p-citizenship-other").value,
+    passportNumber: document.getElementById("p-passport-number").value,
+    passportExpiry: document.getElementById("p-passport-expiry").value,
+    homeAddress: document.getElementById("p-home-address").value,
+    localAddress: document.getElementById("p-local-address").value
+  };
+  try{ localStorage.setItem("lighthouse_profile", JSON.stringify(PROFILE)); }catch(e){}
+  renderMedicalStrip();
+  if(btn){
+    const original = btn.textContent;
+    btn.textContent = "Saved ✓";
+    setTimeout(()=>{ btn.textContent = original; }, 1500);
+  }
+}
+
+function clearProfile(){
+  if(!confirm("Clear all saved profile data from this device? This can't be undone.")) return;
+  try{ localStorage.removeItem("lighthouse_profile"); }catch(e){}
+  PROFILE = {};
+  loadProfileForm();
+  renderMedicalStrip();
+}
+
+function hasMedicalData(){
+  return !!(PROFILE && (PROFILE.blood || PROFILE.allergies || PROFILE.conditions || PROFILE.medications || PROFILE.iceName));
+}
+
+function renderMedicalStrip(){
+  const el = document.getElementById("home-medid-strip");
+  if(!el) return;
+  if(!hasMedicalData()){ el.style.display = "none"; el.innerHTML = ""; return; }
+  let html = '<div class="medid-card"><h3>Medical ID</h3>';
+  if(PROFILE.blood) html += `<div class="medid-row"><b>${PROFILE.blood}</b> blood type</div>`;
+  if(PROFILE.allergies) html += `<div class="medid-row">Allergic to <b>${PROFILE.allergies}</b></div>`;
+  if(PROFILE.conditions) html += `<div class="medid-row">Conditions: <b>${PROFILE.conditions}</b></div>`;
+  if(PROFILE.medications) html += `<div class="medid-row">Medications: <b>${PROFILE.medications}</b></div>`;
+  if(PROFILE.iceName) html += `<div class="medid-row">ICE: <b>${PROFILE.iceName}</b>${PROFILE.icePhone ? ' — <a href="'+telHref(PROFILE.icePhone)+'" style="color:#FF8A8E;">'+PROFILE.icePhone+'</a>' : ''}</div>`;
+  html += "</div>";
+  el.innerHTML = html;
+  el.style.display = "block";
+}
+
+function renderEmbassyScreen(){
+  loadProfile();
+  const body = document.getElementById("embassy-body");
+  const citizenships = (PROFILE.citizenships || []).slice();
+  const countryName = (LAST_LOCATION && DATA[LAST_LOCATION.code]) ? DATA[LAST_LOCATION.code].n : null;
+  let html = "";
+
+  if(citizenships.length === 0 && !PROFILE.citizenshipOther){
+    html += '<div class="privacy-note">Add your citizenship in <b>Profile</b> to see your embassy or consulate here.</div>';
+    body.innerHTML = html;
+    return;
+  }
+  if(!LAST_LOCATION){
+    html += '<div class="privacy-note">Detect your location from the <b>Home</b> tab first for a precise match — showing general embassy finders for now.</div>';
+  }
+  citizenships.forEach(code=>{
+    const link = EMBASSY_LINKS[code];
+    const cityData = LAST_LOCATION && LAST_LOCATION.cityKey ? (EMBASSY_DATA[code] || {})[LAST_LOCATION.cityKey] : null;
+    html += '<div class="embassy-card">';
+    html += `<div class="em-flag">${flagEmoji(code === "UK" ? "GB" : code)}</div>`;
+    if(cityData){
+      html += `<h4>${cityData.name}</h4>`;
+      if(cityData.address) html += `<div class="em-detail">${cityData.address}</div>`;
+      if(cityData.phone) html += `<a class="em-call" href="${telHref(cityData.phone)}">${cityData.phone}</a>`;
+    } else {
+      html += `<h4>${link.label} embassy${countryName ? " in " + countryName : ""}</h4>`;
+      html += '<div class="em-detail">We don\'t have a hand-checked address for this location yet.</div>';
+      html += `<a class="em-link" href="${link.url}" target="_blank" rel="noopener">Find it on the official site →</a>`;
+    }
+    html += "</div>";
+  });
+  if(PROFILE.citizenshipOther){
+    const q = encodeURIComponent(PROFILE.citizenshipOther + " embassy in " + (countryName || ""));
+    html += '<div class="embassy-card"><div class="em-flag">🌍</div>' +
+      `<h4>${PROFILE.citizenshipOther} embassy${countryName ? " in " + countryName : ""}</h4>` +
+      '<div class="em-detail">Search your government\'s official embassy finder.</div>' +
+      `<a class="em-link" href="https://www.google.com/search?q=${q}" target="_blank" rel="noopener">Search →</a></div>`;
+  }
+  body.innerHTML = html;
+}
+
+loadProfile();
+renderMedicalStrip();
+
+let CURRENT_MODE = "gps";
+
+const HOME_TAB_SCREENS = {splash:"home", locating:"home", result:"home", search:"home", embassy:"embassy", profile:"profile"};
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  const tab = HOME_TAB_SCREENS[id] || "home";
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  const btn = document.getElementById("nav-" + tab);
+  if(btn) btn.classList.add("active");
+}
+function goBack(){ show(document.getElementById("r-country").textContent==="—" ? "splash" : "result"); }
+function switchTab(tab){
+  if(tab === "home"){
+    show(LAST_LOCATION ? "result" : "splash");
+  } else if(tab === "embassy"){
+    renderEmbassyScreen();
+    show("embassy");
+  } else if(tab === "profile"){
+    loadProfileForm();
+    show("profile");
+  }
+}
+function showSearch(){
+  const input = document.getElementById("search-input");
+  if(input) input.value = "";
+  renderCountryList("");
+  renderFeaturedCities();
+  toggleFeatured("");
+  show("search");
+}
+
+function flagEmoji(code){
+  if(!code || code.length!==2) return "🌍";
+  const cc = code.toUpperCase();
+  try{
+    return String.fromCodePoint(...[...cc].map(c=>127397+c.charCodeAt(0)));
+  }catch(e){ return "🌍"; }
+}
+
+function requestLocation(){
+  CURRENT_MODE = "gps";
+  show("locating");
+  document.getElementById("locating-sub").textContent = "Getting your location, then matching it to local emergency services.";
+  if(!navigator.geolocation){
+    document.getElementById("locating-sub").textContent = "This browser can't detect location. Please search manually.";
+    setTimeout(showSearch, 1200);
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(onLocationSuccess, onLocationError, {
+    enableHighAccuracy:true, timeout:12000, maximumAge:60000
+  });
+}
+
+async function onLocationSuccess(pos){
+  const {latitude, longitude} = pos.coords;
+  document.getElementById("locating-sub").textContent = "Matching your coordinates to a country…";
+  try{
+    const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
+    if(!res.ok) throw new Error("geocode failed");
+    const data = await res.json();
+    const code = (data.countryCode||"").toUpperCase();
+    const name = data.countryName || "";
+    const key = DATA[code] ? code : resolveByName(name);
+    if(key){
+      const localityStr = data.city || data.locality || "";
+      const cityKey = findCityKey(localityStr);
+      renderResult(key, {gps:true, locality:localityStr, cityKey});
+    } else {
+      throw new Error("no match");
+    }
+  }catch(e){
+    document.getElementById("locating-sub").textContent = "Couldn't identify your country automatically. Tip: dialing 112 or 911 often works as a backup, even without the exact local number.";
+    setTimeout(showSearch, 1800);
+  }
+}
+
+function onLocationError(err){
+  document.getElementById("locating-sub").textContent = "Location access wasn't available. Tip: dialing 112 or 911 often works as a backup — meanwhile, search for your country below.";
+  setTimeout(showSearch, 1800);
+}
+
+function resolveByName(name){
+  const norm = (name||"").trim().toLowerCase();
+  if(NAME_ALIASES[norm]) return NAME_ALIASES[norm];
+  for(const code in DATA){
+    if(DATA[code].n.toLowerCase() === norm) return code;
+  }
+  // fuzzy contains match as last resort
+  for(const code in DATA){
+    if(norm && (DATA[code].n.toLowerCase().includes(norm) || norm.includes(DATA[code].n.toLowerCase()))) return code;
+  }
+  return null;
+}
+
+function svcCard(el, label, number){
+  if(number){
+    el.href = telHref(number);
+    el.querySelector(".svc-number").textContent = number;
+    el.classList.remove("disabled");
+  } else {
+    el.removeAttribute("href");
+    el.querySelector(".svc-number").textContent = "—";
+    el.classList.add("disabled");
+  }
+}
+
+function renderResult(code, opts){
+  opts = opts || {};
+  LAST_LOCATION = {code:code, cityKey: opts.cityKey || null, locality: opts.locality || "", gps: !!opts.gps};
+  const d = DATA[code];
+  document.getElementById("r-flag").textContent = flagEmoji(code);
+  document.getElementById("r-country").textContent = d.n;
+  document.getElementById("r-sub").textContent = opts.gps
+    ? (opts.locality ? `Detected near ${opts.locality}` : "Detected via your location")
+    : "Selected manually";
+
+  const primaryNumber = d.g || d.p || d.a || d.f || "—";
+  const primaryLabel = d.g ? "General Emergency" : (d.p ? "Police" : (d.a ? "Ambulance" : "Emergency"));
+  document.getElementById("r-primary-label").textContent = primaryLabel;
+  document.getElementById("r-primary-number").textContent = primaryNumber;
+  const primaryEl = document.getElementById("r-primary");
+  if(primaryNumber !== "—"){
+    primaryEl.href = telHref(primaryNumber);
+  } else {
+    primaryEl.removeAttribute("href");
+  }
+
+  svcCard(document.getElementById("r-police"), "Police", d.p);
+  svcCard(document.getElementById("r-ambulance"), "Ambulance", d.a);
+  svcCard(document.getElementById("r-fire"), "Fire", d.f);
+
+  const notesEl = document.getElementById("r-notes");
+  if(d.x){
+    notesEl.style.display = "block";
+    notesEl.innerHTML = "<b>Good to know:</b> " + d.x;
+  } else {
+    notesEl.style.display = "none";
+  }
+
+  renderCityCard(opts.cityKey || null);
+
+  show("result");
+}
+
+function renderCountryList(filter){
+  const list = document.getElementById("country-list");
+  list.innerHTML = "";
+  const f = (filter||"").toLowerCase();
+  const entries = Object.entries(DATA)
+    .map(([code, d])=>({code, ...d}))
+    .filter(d => !f || d.n.toLowerCase().includes(f))
+    .sort((a,b)=>a.n.localeCompare(b.n));
+  entries.forEach(d=>{
+    const li = document.createElement("li");
+    li.className = "country-row";
+    li.innerHTML = `<span class="flag">${flagEmoji(d.code)}</span><span class="cn">${d.n}</span><span class="cg">${d.g || d.p || ""}</span>`;
+    li.onclick = ()=> renderResult(d.code, {gps:false});
+    list.appendChild(li);
+  });
+}
+</script>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
