@@ -164,6 +164,10 @@
   #splash.lh-day #home-medid-strip .medid-row{ color:#3B4A5F; }
   #splash.lh-day #home-medid-strip .medid-row b{ color:#16233B; }
 
+  /* fallback-tip must stay legible in day mode too (pale background) */
+  #splash.lh-day .fallback-tip{ background:#FFF4DE; border-color:#E3B472; color:#6B4A24; }
+  #splash.lh-day .fallback-tip b{ color:#96631A; }
+
   .primary-btn{
     appearance:none; border:none; cursor:pointer;
     background:linear-gradient(180deg, var(--beam) 0%, #E8A730 100%);
@@ -315,7 +319,7 @@
 
     <div class="lh-header">
       <div class="lh-wordmark">Lighthouse</div>
-      <button class="lh-menu-btn" onclick="switchTab('profile')" aria-label="Menu">☰</button>
+      <button class="lh-menu-btn" onclick="switchTab('profile')" aria-label="Profile">👤</button>
     </div>
 
     <div class="lh-hero">
@@ -547,7 +551,6 @@
 <div class="bottom-nav">
   <button class="nav-btn active" id="nav-home" onclick="switchTab('home')"><span class="nav-icon">🏠</span>Home</button>
   <button class="nav-btn" id="nav-embassy" onclick="switchTab('embassy')"><span class="nav-icon">🛂</span>Embassy</button>
-  <button class="nav-btn" id="nav-profile" onclick="switchTab('profile')"><span class="nav-icon">👤</span>Profile</button>
 </div>
 
 <script>
