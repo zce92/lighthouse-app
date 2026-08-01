@@ -6,10 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0B1B33">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <title>Lighthouse — Emergency Help, Anywhere</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
 <style>
   :root{
     --navy-deep:#071226;
@@ -51,31 +51,119 @@
   .screen.active{ display:flex; }
   @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 
-  /* ---------- Splash ---------- */
-  #splash{ align-items:center; justify-content:center; text-align:center; gap:22px; }
-  .beacon{
-    width:120px; height:120px; border-radius:50%;
-    position:relative; display:flex; align-items:center; justify-content:center;
-    background:radial-gradient(circle at 50% 50%, #16305B 0%, #0E2140 70%);
-    box-shadow:0 0 0 1px rgba(255,255,255,.06);
+  /* ---------- Splash / Home hero ---------- */
+  #splash{
+    align-items:stretch; justify-content:flex-start; text-align:left; gap:0;
+    border-radius:28px; overflow:hidden;
+    padding:0 0 calc(var(--safe-bottom) + 84px) 0;
+    transition:background .6s ease;
   }
-  .beacon::before{
-    content:"";
-    position:absolute; inset:-40px;
-    border-radius:50%;
-    background:conic-gradient(from 0deg, transparent 0deg, var(--beam-soft) 18deg, transparent 40deg, transparent 360deg);
-    animation:sweep 2.6s linear infinite;
-    filter:blur(1px);
+  #splash.lh-night{ background:linear-gradient(180deg,#0A1730 0%, #0B1B33 38%, #0B1B33 100%); }
+  #splash.lh-day{ background:linear-gradient(180deg,#EAF1FA 0%, #F7F5EF 38%, #F7F5EF 100%); }
+
+  .lh-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 20px 0; }
+  .lh-wordmark{ font-family:"Fraunces","Playfair Display",Georgia,serif; font-size:26px; font-weight:600; letter-spacing:.2px; }
+  #splash.lh-night .lh-wordmark{ color:var(--white); }
+  #splash.lh-day .lh-wordmark{ color:#16233B; }
+  .lh-menu-btn{
+    width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:15px; padding:0;
   }
-  @keyframes sweep{ to{ transform:rotate(360deg); } }
-  .beacon-core{
-    width:56px; height:56px; border-radius:50%;
-    background:radial-gradient(circle, var(--beam) 0%, #E08F1A 100%);
-    box-shadow:0 0 30px 6px rgba(255,194,75,.55);
-    z-index:2;
+  #splash.lh-night .lh-menu-btn{ background:rgba(255,255,255,.1); color:var(--white); }
+  #splash.lh-day .lh-menu-btn{ background:rgba(22,35,59,.08); color:#16233B; }
+
+  .lh-hero{ position:relative; margin:14px 20px 0; border-radius:22px; overflow:hidden; aspect-ratio:4/3.05; }
+  #splash.lh-night .lh-hero{ background:radial-gradient(120% 90% at 50% 15%, #1B2E52 0%, #0C1A34 55%, #060D1C 100%); }
+  #splash.lh-day .lh-hero{ background:linear-gradient(180deg,#CFE1F2 0%, #E9ECE2 55%, #E9ECE2 100%); }
+  .lh-scene{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  .lh-stars{ opacity:0; transition:opacity .6s ease; }
+  #splash.lh-night .lh-stars{ opacity:1; }
+
+  #splash.lh-night .lh-sea{ fill:#0A1A34; }
+  #splash.lh-day .lh-sea{ fill:#CBDCE9; }
+  #splash.lh-night .lh-cliff{ fill:#111F3B; }
+  #splash.lh-day .lh-cliff{ fill:#DAD3BF; }
+
+  #splash.lh-night .lh-tower-body{ fill:#2A3B5C; }
+  #splash.lh-day .lh-tower-body{ fill:#F4F1E6; }
+  #splash.lh-night .lh-lamp-room{ fill:#0E1830; stroke:var(--beam); stroke-width:1.5; }
+  #splash.lh-day .lh-lamp-room{ fill:#2B3345; stroke:#2B3345; }
+  #splash.lh-night .lh-roof{ fill:#18233D; stroke:#18233D; }
+  #splash.lh-day .lh-roof{ fill:#B9694F; stroke:#B9694F; }
+
+  .lh-lamp-glow{ fill:var(--beam); }
+  #splash.lh-day .lh-lamp-glow{ fill:#FFE3A3; opacity:.6; }
+
+  .lh-beam-group{ transform-box:view-box; transform-origin:200px 101px; }
+  #splash.lh-night .lh-beam-group{ animation:beamSweep 5.5s ease-in-out infinite alternate; }
+  #splash.lh-day .lh-beam-group{ animation:none; transform:rotate(16deg); }
+  @keyframes beamSweep{
+    0%{ transform:rotate(-32deg); }
+    100%{ transform:rotate(34deg); }
   }
-  .brand{ font-size:34px; font-weight:800; letter-spacing:-0.5px; }
-  .tagline{ color:var(--muted); font-size:15px; max-width:280px; line-height:1.4; }
+  .lh-beam{ fill:url(#beamGradNight); opacity:.6; }
+  #splash.lh-day .lh-beam{ fill:url(#beamGradDay); opacity:.35; }
+
+  .lh-headline{ padding:16px 20px 0; font-family:"Fraunces","Playfair Display",Georgia,serif; font-size:24px; line-height:1.25; font-weight:500; }
+  #splash.lh-night .lh-headline{ color:var(--white); }
+  #splash.lh-day .lh-headline{ color:#16233B; }
+  #splash.lh-night .lh-highlight{ color:var(--beam); }
+  #splash.lh-day .lh-highlight{ color:#3E7CC0; }
+  .lh-subtext{ font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:13.5px; font-weight:400; margin-top:6px; line-height:1.45; }
+  #splash.lh-night .lh-subtext{ color:var(--muted); }
+  #splash.lh-day .lh-subtext{ color:#5B6B80; }
+
+  .lh-cta{
+    appearance:none; border:none; cursor:pointer; width:calc(100% - 40px); margin:14px 20px 0;
+    display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:18px; text-align:left;
+  }
+  #splash.lh-night .lh-cta{ background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12); }
+  #splash.lh-day .lh-cta{ background:#FFFFFF; box-shadow:0 6px 18px rgba(22,35,59,.08); }
+  .lh-cta-icon{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:0 0 auto; font-size:16px; }
+  #splash.lh-night .lh-cta-icon{ background:rgba(255,194,75,.18); }
+  #splash.lh-day .lh-cta-icon{ background:#E7F0FA; }
+  .lh-cta-text{ flex:1; font-size:14.5px; font-weight:700; line-height:1.3; }
+  #splash.lh-night .lh-cta-text{ color:var(--white); }
+  #splash.lh-day .lh-cta-text{ color:#16233B; }
+  .lh-cta-arrow{ font-size:16px; flex:0 0 auto; }
+  #splash.lh-night .lh-cta-arrow{ color:var(--beam); }
+  #splash.lh-day .lh-cta-arrow{ color:#3E7CC0; }
+
+  .lh-categories{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:14px 20px 0; }
+  .lh-cat-card{ border-radius:16px; padding:12px 8px; text-align:center; cursor:pointer; }
+  #splash.lh-night .lh-cat-card{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); }
+  #splash.lh-day .lh-cat-card{ background:#FFFFFF; box-shadow:0 4px 12px rgba(22,35,59,.06); }
+  .lh-cat-icon{ font-size:18px; margin-bottom:4px; }
+  .lh-cat-title{ font-size:12.5px; font-weight:700; }
+  #splash.lh-night .lh-cat-title{ color:var(--white); }
+  #splash.lh-day .lh-cat-title{ color:#16233B; }
+  .lh-cat-desc{ font-size:10px; margin-top:2px; line-height:1.3; }
+  #splash.lh-night .lh-cat-desc{ color:var(--muted); }
+  #splash.lh-day .lh-cat-desc{ color:#7C8A9C; }
+
+  .lh-location-bar{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:14px 20px 0; padding:11px 14px; border-radius:14px; font-size:12.5px; }
+  #splash.lh-night .lh-location-bar{ background:rgba(255,255,255,.06); color:var(--off); }
+  #splash.lh-day .lh-location-bar{ background:#FFFFFF; color:#3B4A5F; }
+  .lh-change-link{ background:none; border:none; font-weight:700; font-size:12.5px; cursor:pointer; padding:2px; }
+  #splash.lh-night .lh-change-link{ color:var(--beam); }
+  #splash.lh-day .lh-change-link{ color:#3E7CC0; }
+
+  .lh-footer{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:14px 20px 0; font-size:11.5px; }
+  #splash.lh-night .lh-footer{ color:var(--muted); }
+  #splash.lh-day .lh-footer{ color:#7C8A9C; }
+  .lh-footer button{ background:none; border:none; font-weight:700; cursor:pointer; font-size:11.5px; padding:0; }
+  #splash.lh-night .lh-footer button{ color:var(--beam); }
+  #splash.lh-day .lh-footer button{ color:#3E7CC0; }
+
+  .lh-extra{ padding:14px 20px 0; }
+
+  /* medical-ID strip must stay legible in day mode too (pale background) */
+  #splash.lh-day #home-medid-strip .medid-card{ background:linear-gradient(180deg, rgba(196,60,52,.10) 0%, rgba(196,60,52,.04) 100%); border-color:rgba(196,60,52,.28); }
+  #splash.lh-day #home-medid-strip .medid-card h3{ color:#B23A32; }
+  #splash.lh-day #home-medid-strip .medid-row{ color:#3B4A5F; }
+  #splash.lh-day #home-medid-strip .medid-row b{ color:#16233B; }
+
   .primary-btn{
     appearance:none; border:none; cursor:pointer;
     background:linear-gradient(180deg, var(--beam) 0%, #E8A730 100%);
@@ -131,6 +219,14 @@
 
   .notes-box{ background:rgba(255,255,255,.05); border-radius:16px; padding:14px 16px; font-size:13px; color:var(--off); line-height:1.5; margin-bottom:16px; }
   .notes-box b{ color:var(--beam-soft); }
+
+  .share-loc-btn{
+    appearance:none; border:1px solid rgba(74,158,255,.35); cursor:pointer;
+    background:rgba(74,158,255,.1); color:var(--blue); font-weight:700; font-size:14px;
+    padding:13px 18px; border-radius:14px; width:100%; margin-bottom:16px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .share-loc-btn:active{ background:rgba(74,158,255,.18); }
 
   .disclaimer{ font-size:11.5px; color:var(--muted); line-height:1.5; text-align:center; padding:0 6px; margin-top:auto; }
 
@@ -215,15 +311,102 @@
 
   <!-- SPLASH -->
   <div class="screen active" id="splash">
-    <div id="home-medid-strip" style="display:none; width:100%;"></div>
-    <div class="beacon"><div class="beacon-core"></div></div>
-    <div class="brand">Lighthouse</div>
-    <div class="tagline">Wherever you are in the world, know exactly who to call for help — instantly.</div>
-    <div style="width:100%; display:flex; flex-direction:column; gap:10px; margin-top:8px;">
-      <button class="primary-btn" onclick="requestLocation()">Find my local emergency numbers</button>
+    <div id="home-medid-strip" style="display:none; width:100%; padding:0 20px;"></div>
+
+    <div class="lh-header">
+      <div class="lh-wordmark">Lighthouse</div>
+      <button class="lh-menu-btn" onclick="switchTab('profile')" aria-label="Menu">☰</button>
+    </div>
+
+    <div class="lh-hero">
+      <svg class="lh-scene" viewBox="0 0 400 300" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="beamGradNight" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#FFE3A3" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#FFE3A3" stop-opacity="0"/>
+          </linearGradient>
+          <linearGradient id="beamGradDay" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+
+        <!-- stars -->
+        <g class="lh-stars" fill="#FFFFFF">
+          <circle cx="34" cy="28" r="1.3"/><circle cx="70" cy="55" r="1"/><circle cx="112" cy="24" r="1.4"/>
+          <circle cx="150" cy="60" r="1"/><circle cx="190" cy="30" r="1.2"/><circle cx="228" cy="50" r="1"/>
+          <circle cx="60" cy="90" r="1"/><circle cx="20" cy="70" r="1"/><circle cx="130" cy="85" r="1.1"/>
+          <circle cx="350" cy="40" r="1.3"/><circle cx="370" cy="75" r="1"/><circle cx="90" cy="40" r="1"/>
+        </g>
+
+        <!-- beam (behind tower so it reads as light cast into the sky) -->
+        <g class="lh-beam-group">
+          <polygon class="lh-beam" points="200,101 110,15 285,15"/>
+        </g>
+
+        <!-- sea -->
+        <rect class="lh-sea" x="0" y="228" width="400" height="72"/>
+
+        <!-- cliff / headland -->
+        <polygon class="lh-cliff" points="0,300 0,265 100,235 200,222 300,235 400,265 400,300"/>
+
+        <!-- tower -->
+        <g>
+          <polygon class="lh-tower-body" points="184,196 216,196 207,110 193,110"/>
+          <rect class="lh-tower-body" x="183" y="150" width="34" height="8"/>
+          <rect class="lh-lamp-room" x="185" y="90" width="30" height="21" rx="2"/>
+          <polygon class="lh-roof" points="184,90 216,90 200,70"/>
+          <line x1="200" y1="70" x2="200" y2="58" stroke="currentColor" class="lh-roof" stroke-width="2"/>
+          <circle class="lh-lamp-glow" cx="200" cy="100" r="20" opacity=".14"/>
+          <circle class="lh-lamp-glow" cx="200" cy="100" r="12" opacity=".26"/>
+          <circle class="lh-lamp-glow" cx="200" cy="100" r="6" opacity=".85"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="lh-headline" id="lh-headline"></div>
+
+    <button class="lh-cta" onclick="requestLocation()">
+      <span class="lh-cta-icon">📍</span>
+      <span class="lh-cta-text">Find my local<br>emergency numbers</span>
+      <span class="lh-cta-arrow">→</span>
+    </button>
+
+    <div class="lh-categories">
+      <div class="lh-cat-card" onclick="requestLocation()">
+        <div class="lh-cat-icon">👮</div>
+        <div class="lh-cat-title">Police</div>
+        <div class="lh-cat-desc">Local law enforcement</div>
+      </div>
+      <div class="lh-cat-card" onclick="requestLocation()">
+        <div class="lh-cat-icon">🚑</div>
+        <div class="lh-cat-title">Medical</div>
+        <div class="lh-cat-desc">Ambulance &amp; hospitals</div>
+      </div>
+      <div class="lh-cat-card" onclick="requestLocation()">
+        <div class="lh-cat-icon">🚒</div>
+        <div class="lh-cat-title">Fire</div>
+        <div class="lh-cat-desc">Fire &amp; rescue</div>
+      </div>
+    </div>
+
+    <div class="lh-location-bar">
+      <span>📍 Using location: <b id="lh-location-text">Not detected yet</b></span>
+      <button class="lh-change-link" onclick="showSearch()">Change</button>
+    </div>
+
+    <div class="lh-extra">
       <button class="ghost-btn" onclick="showSearch()">Search for a country manually</button>
     </div>
-    <div class="fallback-tip" style="margin-top:8px;"><b>If this ever fails you:</b> in many countries, dialing <b>112</b> (or <b>911</b>) connects you to local emergency services even without the exact number, no signal from your own carrier, or even a SIM card. It's not guaranteed everywhere — but it's worth trying.</div>
+
+    <div class="lh-footer">
+      <span>🛡️ Your safety. Our priority.</span>
+      <button onclick="document.getElementById('splash-fallback-tip').scrollIntoView({behavior:'smooth', block:'center'})">Learn more →</button>
+    </div>
+
+    <div class="lh-extra">
+      <div class="fallback-tip" id="splash-fallback-tip"><b>If this ever fails you:</b> in many countries, dialing <b>112</b> (or <b>911</b>) connects you to local emergency services even without the exact number, no signal from your own carrier, or even a SIM card. It's not guaranteed everywhere — but it's worth trying.</div>
+    </div>
   </div>
 
   <!-- LOCATING -->
@@ -268,6 +451,10 @@
         <div class="svc-number">—</div>
       </a>
     </div>
+
+    <button class="share-loc-btn" onclick="shareLocation()">
+      <span>📍</span> Share my current location
+    </button>
 
     <div class="notes-box" id="r-notes" style="display:none;"></div>
 
@@ -804,6 +991,7 @@ function toggleFeatured(filterVal){
    ========================================================= */
 let LAST_LOCATION = null;
 let PROFILE = {};
+const APP_BASE_URL = "https://zce92.github.io/lighthouse-app/";
 
 const EMBASSY_DATA = {
   UK:{
@@ -967,6 +1155,26 @@ function renderEmbassyScreen(){
 loadProfile();
 renderMedicalStrip();
 
+function isDaytime(){
+  const h = new Date().getHours();
+  return h >= 6 && h < 19;
+}
+function applyHomeTheme(){
+  const el = document.getElementById("splash");
+  if(!el) return;
+  const day = isDaytime();
+  el.classList.remove("lh-day", "lh-night");
+  el.classList.add(day ? "lh-day" : "lh-night");
+  const headline = document.getElementById("lh-headline");
+  if(headline){
+    headline.innerHTML = day
+      ? 'Help is <span class="lh-highlight">closer</span> than you think.<div class="lh-subtext">Quickly find local emergency numbers and resources wherever you are.</div>'
+      : 'Guiding you to the right help, when it <span class="lh-highlight">matters</span> most.';
+  }
+}
+applyHomeTheme();
+setInterval(applyHomeTheme, 10 * 60 * 1000);
+
 let CURRENT_MODE = "gps";
 
 const HOME_TAB_SCREENS = {splash:"home", locating:"home", result:"home", search:"home", embassy:"embassy", profile:"profile"};
@@ -1034,13 +1242,37 @@ async function onLocationSuccess(pos){
     if(key){
       const localityStr = data.city || data.locality || "";
       const cityKey = findCityKey(localityStr);
-      renderResult(key, {gps:true, locality:localityStr, cityKey});
+      renderResult(key, {gps:true, locality:localityStr, cityKey, lat:latitude, lng:longitude});
     } else {
       throw new Error("no match");
     }
   }catch(e){
     document.getElementById("locating-sub").textContent = "Couldn't identify your country automatically. Tip: dialing 112 or 911 often works as a backup, even without the exact local number.";
     setTimeout(showSearch, 1800);
+  }
+}
+
+function shareLocation(){
+  if(!LAST_LOCATION || typeof LAST_LOCATION.lat !== "number" || typeof LAST_LOCATION.lng !== "number"){
+    alert("Find your location first (tap “Find my local emergency numbers”), then you can share it.");
+    return;
+  }
+  const lat = LAST_LOCATION.lat.toFixed(5);
+  const lng = LAST_LOCATION.lng.toFixed(5);
+  const when = new Date().toLocaleString(undefined, {hour:"2-digit", minute:"2-digit", day:"numeric", month:"short"});
+  const shareLink = `${APP_BASE_URL}share.html?lat=${lat}&lng=${lng}&t=${encodeURIComponent(when)}`;
+  const message = `📍 My current location as of ${when}: ${shareLink}\n\nSent via Lighthouse — the emergency-help app. (This is a one-time snapshot, not a live tracker — it won’t update after you receive it.)`;
+
+  if(navigator.share){
+    navigator.share({title:"My current location", text:message}).catch(()=>{});
+  } else if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(message).then(()=>{
+      alert("Location link copied. Paste it into a text, WhatsApp, or email to share it.");
+    }).catch(()=>{
+      prompt("Copy this link to share your location:", shareLink);
+    });
+  } else {
+    prompt("Copy this link to share your location:", shareLink);
   }
 }
 
@@ -1076,8 +1308,10 @@ function svcCard(el, label, number){
 
 function renderResult(code, opts){
   opts = opts || {};
-  LAST_LOCATION = {code:code, cityKey: opts.cityKey || null, locality: opts.locality || "", gps: !!opts.gps};
+  LAST_LOCATION = {code:code, cityKey: opts.cityKey || null, locality: opts.locality || "", gps: !!opts.gps, lat: opts.lat, lng: opts.lng};
   const d = DATA[code];
+  const lhLocText = document.getElementById("lh-location-text");
+  if(lhLocText) lhLocText.textContent = opts.locality ? `${opts.locality}, ${d.n}` : d.n;
   document.getElementById("r-flag").textContent = flagEmoji(code);
   document.getElementById("r-country").textContent = d.n;
   document.getElementById("r-sub").textContent = opts.gps
@@ -1126,13 +1360,6 @@ function renderCountryList(filter){
     li.innerHTML = `<span class="flag">${flagEmoji(d.code)}</span><span class="cn">${d.n}</span><span class="cg">${d.g || d.p || ""}</span>`;
     li.onclick = ()=> renderResult(d.code, {gps:false});
     list.appendChild(li);
-  });
-}
-</script>
-<script>
-if("serviceWorker" in navigator){
-  window.addEventListener("load", function(){
-    navigator.serviceWorker.register("sw.js").catch(function(){});
   });
 }
 </script>
