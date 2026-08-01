@@ -189,8 +189,8 @@
   /* ---------- Result ---------- */
   #result{ padding-top:6px; }
   .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
-  .topbar .lockup{ display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px; color:var(--muted); }
-  .icon-btn{ background:rgba(255,255,255,.08); border:none; color:var(--white); width:36px; height:36px; border-radius:50%; font-size:16px; cursor:pointer; }
+  .topbar .lockup{ display:flex; align-items:center; justify-content:center; gap:8px; font-weight:700; font-size:15px; color:var(--muted); flex:1; }
+  .icon-btn{ background:rgba(255,255,255,.08); border:none; color:var(--white); width:36px; height:36px; border-radius:50%; font-size:16px; cursor:pointer; flex:0 0 auto; }
 
   .place-card{ text-align:center; margin:6px 0 22px; }
   .flag{ font-size:52px; line-height:1; margin-bottom:8px; }
@@ -419,7 +419,7 @@
   <!-- RESULT -->
   <div class="screen" id="result">
     <div class="topbar">
-      <div class="lockup">🗼 Lighthouse</div>
+      <button class="icon-btn" onclick="show('splash')" aria-label="Back to home" title="Back to home">←</button>
       <button class="icon-btn" onclick="requestLocation()" title="Refresh location">⟳</button>
     </div>
     <div class="place-card">
